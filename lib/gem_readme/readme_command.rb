@@ -63,7 +63,7 @@ class Gem::Commands::ReadmeCommand < Gem::Command
       end
 
       readmes = paths.inject([]) do |result, path|
-        result + Dir[File.join(path, '*')].select{ |i| p File.basename(i); File.basename(i) =~ /^readme/i }
+        result + Dir[File.join(path, '*')].select{ |i| File.basename(i) =~ /^readme/i }
       end
 
       if readmes.empty?
