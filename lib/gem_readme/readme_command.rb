@@ -73,7 +73,7 @@ class Gem::Commands::ReadmeCommand < Gem::Command
 
       cmd = "#{options[:editor]} #{readmes.join(' ')}"
       say "Running `#{cmd}`" if Gem.configuration.verbose
-      exec cmd
+      exec cmd unless options[:dryrun]
     else
       say "No gems found for #{get_all_gem_names.join(', ')}"
       raise Gem::SystemExitException, 1
