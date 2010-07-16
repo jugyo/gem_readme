@@ -5,8 +5,6 @@ class Gem::Commands::ReadmeCommand < Gem::Command
 
   OPTIONS = {
     :version => Gem::Requirement.default,
-    :verbose => false,
-    :dryrun => false,
     :editor => 'less'
   }
 
@@ -22,21 +20,14 @@ class Gem::Commands::ReadmeCommand < Gem::Command
                "Default: #{OPTIONS[:editor]}") do |editor, options|
       options[:editor] = editor
     end
-
-    add_option('-d', '--[no-]dry-run',
-               'Shows what command would be run without running it',
-               'Turns on verbose logging', "Default: #{OPTIONS[:dryrun]}") do |dryrun, options|
-      Gem.configuration.verbose ||= true if dryrun
-      options[:dryrun] = dryrun
-    end
   end
 
   def arguments # :nodoc:
-    "GEMNAME       name of gem to open in your favorite editor"
+    "GEMNAME       name of gem to open README"
   end
 
   def defaults_str # :nodoc:
-    "--version '#{OPTIONS[:version]}' --editor #{OPTIONS[:editor]} --no-dry-run"
+    "--version '#{OPTIONS[:version]}' --editor #{OPTIONS[:editor]}"
   end
 
   def usage # :nodoc:
@@ -46,21 +37,10 @@ class Gem::Commands::ReadmeCommand < Gem::Command
   def execute
     version = options[:version] || OPTIONS[:version]
 
-    gem_specs = get_all_gem_names.map { |gem_name|
-      if spec = Gem.source_index.find_name(gem_name, version).last
-        say "Found gem for '#{gem_name}' with version #{version}" if Gem.configuration.verbose
-      else
-        say "No gem found for '#{gem_name}' with version #{version}" if Gem.configuration.verbose
-      end
-      spec
-    }.compact
+    gem_specs = get_all_gem_names.map { |gem_name| Gem.source_index.find_name(gem_name, version).last }.compact
 
     if gem_specs.size > 0
-      say "Opening the following gems with #{options[:editor]}:" if Gem.configuration.verbose
-      paths = gem_specs.map do |spec|
-        say "  #{spec.full_name} #{spec.full_gem_path}" if Gem.configuration.verbose
-        spec.full_gem_path
-      end
+      paths = gem_specs.map { |spec| spec.full_gem_path }
 
       readmes = paths.inject([]) do |result, path|
         result + Dir[File.join(path, '*')].select{ |i| File.basename(i) =~ /^readme/i }
@@ -72,7 +52,6 @@ class Gem::Commands::ReadmeCommand < Gem::Command
       end
 
       cmd = "#{options[:editor]} #{readmes.join(' ')}"
-      say "Running `#{cmd}`" if Gem.configuration.verbose
       exec cmd unless options[:dryrun]
     else
       say "No gems found for #{get_all_gem_names.join(', ')}"
